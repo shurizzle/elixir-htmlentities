@@ -4,7 +4,7 @@ defmodule HTMLEntities.Mixfile do
   def project do
     [ app: :htmlentities,
       version: "0.0.1",
-      elixir: "~> 0.10.4-dev",
+      elixir: "~> 0.11.1-dev",
       deps: deps ]
   end
 

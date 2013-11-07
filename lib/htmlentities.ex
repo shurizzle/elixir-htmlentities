@@ -62,7 +62,7 @@ defmodule HTMLEntities do
     map = __MODULE__.Map.get(map)
 
     replace(source,
-      %r/&(?:(#{map.entity_pattern}{#{map.min},#{map.max}})|#([0-9]{1,7})|#x([0-9a-f]{1,6}));/iu,
+      %r/&(?:(#{map.entity_pattern}{#{map.min},#{map.max}})|#([0-9]{1,7})|#x([0-9a-f]{1,6}));/i,
       fn(matches) ->
         first = map.convert(Enum.at(matches, 1))
         if first do
@@ -190,11 +190,11 @@ defmodule HTMLEntities do
           end
 
           def basic_entity do
-            %r/[<>"'&]/u
+            %r/[<>"'&]/
           end
 
           def extended_entity do
-            %r/[^\x{20}-\x{7E}]/u
+            %r/[^\x{20}-\x{7E}]/
           end
 
           defoverridable entity_pattern: 0, basic_entity: 0, extended_entity: 0

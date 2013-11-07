@@ -257,10 +257,10 @@ defmap :html4 do
   ]
 
   def basic_entity do
-    %r/[<>"&]/u
+    %r/[<>"&]/
   end
 
   def extended_entity do
-    %r/[^\x{20}-\x{7E}]|'/u
+    %r/[^\x{20}-\x{7E}]|'/
   end
 end
