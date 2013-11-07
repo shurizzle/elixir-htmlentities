@@ -256,11 +256,6 @@ defmap :html4 do
     { "zwnj", << 8204 :: utf8 >> }
   ]
 
-  def basic_entity do
-    %r/[<>"&]/
-  end
-
-  def extended_entity do
-    %r/[^\x{20}-\x{7E}]|'/
-  end
+  defbasic %r/[<>"&]/
+  defextended %r/[^\x{20}-\x{7E}]|'/
 end

@@ -62,7 +62,7 @@ defmodule HTMLEntities do
     map = __MODULE__.Map.get(map)
 
     replace(source,
-      %r/&(?:(#{map.entity_pattern}{#{map.min},#{map.max}})|#([0-9]{1,7})|#x([0-9a-f]{1,6}));/i,
+      %r/&(?:(#{map.entity_pattern})|#([0-9]{1,7})|#x([0-9a-f]{1,6}));/i,
       fn(matches) ->
         first = map.convert(Enum.at(matches, 1))
         if first do
@@ -177,27 +177,78 @@ defmodule HTMLEntities do
       end
     end
 
+    defmacro create_lengths do
+      quote unquote: false do
+        if nil?(@key_length_min) or nil?(@key_length_max) do
+          lengths = Enum.map @map, fn({ name, _ }) ->
+            String.length(name)
+          end
+
+          Module.put_attribute __MODULE__, :key_length_min, Enum.min(lengths)
+          Module.put_attribute __MODULE__, :key_length_max, Enum.max(lengths)
+        end
+      end
+    end
+
+    defmacro key_length_min do
+      quote do
+        unquote(__MODULE__).create_lengths
+        @key_length_min
+      end
+    end
+
+    defmacro key_length_max do
+      quote do
+        unquote(__MODULE__).create_lengths
+        @key_length_max
+      end
+    end
+
+    defmacro defentity(pattern) do
+      quote bind_quoted: [pattern: pattern] do
+        if is_record(pattern, Regex) do
+          def entity_pattern, do: unquote(Regex.source(pattern))
+        else
+          def entity_pattern, do: unquote(pattern)
+        end
+      end
+    end
+
+    defmacro defbasic(pattern) do
+      quote bind_quoted: [pattern: pattern] do
+        if is_record(pattern, Regex) do
+          def basic_entity, do: unquote(Macro.escape(pattern))
+        else
+          def basic_entity, do: unquote(Macro.escape(%r/#{pattern}/))
+        end
+      end
+    end
+
+    defmacro defextended(pattern) do
+      quote bind_quoted: [pattern: pattern] do
+        if is_record(pattern, Regex) do
+          def extended_entity, do: unquote(Macro.escape(pattern))
+        else
+          def extended_entity, do: unquote(Macro.escape(%r/#{pattern}/))
+        end
+      end
+    end
+
     defmacro defmap(name, do: body) do
       quote do
         defmodule Module.concat(unquote(__MODULE__), unquote(name)) do
+          import unquote(__MODULE__), only: [defentity: 1, defbasic: 1, defextended: 1, key_length_min: 0, key_length_max: 0]
           @before_compile unquote(__MODULE__)
 
           @map nil
           @skip_dup_encodings nil
+          @key_length_min nil
+          @key_length_max nil
 
-          def entity_pattern do
-            "[a-z][a-z0-9]"
-          end
+          defbasic %r/[<>"'&]/
+          defextended %r/[^\x{20}-\x{7E}]/
 
-          def basic_entity do
-            %r/[<>"'&]/
-          end
-
-          def extended_entity do
-            %r/[^\x{20}-\x{7E}]/
-          end
-
-          defoverridable entity_pattern: 0, basic_entity: 0, extended_entity: 0
+          defoverridable basic_entity: 0, extended_entity: 0
 
           unquote(body)
         end
@@ -235,15 +286,18 @@ defmodule HTMLEntities do
         def revert(_), do: nil
 
 
-        lengths = Enum.map @map, fn({ name, _ }) ->
-          String.length(name)
-        end
+        if is_list(@map) and not Module.defines?(__MODULE__, { :entity_pattern, 0 }, :def) do
+          if Module.defines?(__MODULE__, { :entity_pattern, 0 }) do
+            defoverridable entity_pattern: 0
+          end
 
-        def min, do: unquote(Enum.min(lengths))
-        def max, do: unquote(Enum.max(lengths))
+          defentity %r/[a-z][a-z0-9]{#{key_length_min - 1},#{key_length_max - 1}}/
+        end
 
         Module.delete_attribute(__MODULE__, :map)
         Module.delete_attribute(__MODULE__, :skip_dup_encodings)
+        Module.delete_attribute(__MODULE__, :key_length_min)
+        Module.delete_attribute(__MODULE__, :key_length_max)
       end
     end
 

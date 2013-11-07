@@ -1034,7 +1034,5 @@ defmap :expanded do
     "thetav", "b.phiv", "thksim", "b.piv", "b.gammad"
   ]
 
-  def entity_pattern do
-    "(?:b\\.)?[a-z][a-z0-9]"
-  end
+  defentity %r/(?:b\\.)?[a-z][a-z0-9]{#{key_length_min - 1},#{key_length_max - 1}}/
 end
