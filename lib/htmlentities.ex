@@ -265,7 +265,10 @@ defmodule HTMLEntities do
             end
           end
         end
-        def convert(_), do: nil
+
+        unless Module.defines?(__MODULE__, { :convert, 1 }, :def) do
+          def convert(_), do: nil
+        end
 
 
         if is_list(@map) do
@@ -283,7 +286,10 @@ defmodule HTMLEntities do
             end
           end
         end
-        def revert(_), do: nil
+
+        unless Module.defines?(__MODULE__, { :revert, 1 }, :def) do
+          def revert(_), do: nil
+        end
 
 
         if is_list(@map) and not Module.defines?(__MODULE__, { :entity_pattern, 0 }, :def) do
