@@ -1,6 +1,6 @@
-use HTMLEntities.Map
+use HTMLEntities.ConversionTable
 
-defmap :xhtml1 do
+defconversions :xhtml1 do
   @map [
     { "Aacute", << 193 :: utf8 >> },
     { "aacute", << 225 :: utf8 >> },

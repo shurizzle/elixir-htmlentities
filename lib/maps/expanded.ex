@@ -1,6 +1,6 @@
-use HTMLEntities.Map
+use HTMLEntities.ConversionTable
 
-defmap :expanded do
+defconversions :expanded do
   @map [
     { "Aacgr", << 902 :: utf8 >> },
     { "aacgr", << 940 :: utf8 >> },

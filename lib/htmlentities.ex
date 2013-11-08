@@ -42,7 +42,7 @@ defmodule HTMLEntities do
       if Enum.member?(instructions, :decimal) and Enum.member?(instructions, :hexadecimal) do
         { :error, :conflictual_instructions }
       else
-        map = __MODULE__.Map.get(map)
+        map = __MODULE__.ConversionTable.get(map)
         encode_basic = build_basic_entity_encoder
         operations = intersect([:named, :decimal, :hexadecimal], instructions)
         encode_extended = fn(match) ->
@@ -59,7 +59,7 @@ defmodule HTMLEntities do
   @spec decode(String.t) :: String.t
   @spec decode(String.t, atom) :: String.t
   def decode(source, map // :xhtml1) when is_binary(source) do
-    map = __MODULE__.Map.get(map)
+    map = __MODULE__.ConversionTable.get(map)
 
     replace(source,
       %r/&(?:(#{map.entity_pattern})|#([0-9]{1,7})|#x([0-9a-f]{1,6}));/i,
@@ -169,11 +169,11 @@ defmodule HTMLEntities do
     "&#x#{integer_to_binary(char, 16)};"
   end
 
-  defmodule Map do
+  defmodule ConversionTable do
     @doc nil
     defmacro __using__(_) do
       quote do
-        import unquote(__MODULE__), only: [defmap: 2]
+        import unquote(__MODULE__), only: [defconversions: 2]
       end
     end
 
@@ -234,7 +234,7 @@ defmodule HTMLEntities do
       end
     end
 
-    defmacro defmap(name, do: body) do
+    defmacro defconversions(name, do: body) do
       quote do
         defmodule Module.concat(unquote(__MODULE__), unquote(name)) do
           import unquote(__MODULE__), only: [defentity: 1, defbasic: 1, defextended: 1, key_length_min: 0, key_length_max: 0]
@@ -302,7 +302,7 @@ defmodule HTMLEntities do
     end
 
     def get(map) do
-      Module.safe_concat(HTMLEntities.Map, map)
+      Module.safe_concat(HTMLEntities.ConversionTable, map)
     end
   end
 end
